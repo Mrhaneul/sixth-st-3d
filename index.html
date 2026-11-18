@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1100 6th St, Norco · design draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0EC; --panel:#FAFAF7; --ink:#1D2327; --muted:#5E676D; --rule:#D5D9D4;
+  --accent:#1F5FA8; --warn:#9A4A10; --ok:#2E6B3A; --field:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1C2023; --panel:#22272A; --ink:#E8ECEA; --muted:#A3ACB0; --rule:#3A4246;
+    --accent:#7FB0EA; --warn:#E3A06A; --ok:#86C793; --field:#2B3135;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C2023; --panel:#22272A; --ink:#E8ECEA; --muted:#A3ACB0; --rule:#3A4246;
+  --accent:#7FB0EA; --warn:#E3A06A; --ok:#86C793; --field:#2B3135;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+#app{display:grid;grid-template-columns:360px 1fr;height:100%}
+#panel{background:var(--panel);border-right:1px solid var(--rule);overflow-y:auto;padding:22px 22px 28px}
+#view{position:relative;overflow:hidden;min-height:0}
+#view canvas{display:block}
+h1{font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0 0 2px}
+.sub{color:var(--muted);margin:0 0 18px}
+fieldset{border:0;border-top:1px solid var(--rule);margin:0;padding:14px 0 6px}
+legend{font-weight:600;font-size:13px;padding:0;margin-bottom:8px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0}
+.row label{color:var(--muted)}
+.val{font-variant-numeric:tabular-nums;font-weight:600;min-width:70px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 8px}
+input[type=number]{width:96px;padding:5px 7px;border:1px solid var(--rule);border-radius:4px;background:var(--field);color:var(--ink);font:inherit;text-align:right}
+.views{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;font-weight:500;padding:6px 11px;border:1px solid var(--rule);border-radius:4px;background:var(--field);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td{padding:4px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+td:last-child{text-align:right;font-weight:600;white-space:nowrap;padding-left:8px}
+td small{color:var(--muted);font-weight:400}
+td.ok{color:var(--ok)} td.bad{color:var(--warn)}
+.sched td:first-child{width:14px;padding-right:6px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-top:4px;border:1px solid rgba(0,0,0,.15)}
+.sched tr.fl td{font-weight:600;color:var(--muted);padding-top:10px;border-bottom:1px solid var(--ink)}
+summary{cursor:pointer;font-weight:600;font-size:13px;padding:2px 0 8px}
+.note{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+.bar{position:absolute;top:12px;z-index:5;display:flex;gap:6px;flex-wrap:wrap}
+.bar.left{left:12px;right:230px}
+.bar.right{right:12px;flex-direction:column;align-items:flex-end}
+.seg{display:flex}
+.seg button{border-radius:0}
+.seg button:first-child{border-radius:4px 0 0 4px}
+.seg button:last-child{border-radius:0 4px 4px 0;margin-left:-1px}
+.bar button{box-shadow:0 1px 3px rgba(0,0,0,.18);font-weight:600;background:#FFFFFF;color:#1D2327;border-color:#C9CFCB}
+.bar button[aria-pressed="true"].mode,.bar button[aria-pressed="true"].ctr,.bar button.icon-btn[aria-pressed="true"]{background:#1D2327;color:#FFFFFF;border-color:#1D2327}
+.bar button.icon-btn{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px}
+#secbar{position:absolute;top:54px;left:12px;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:rgba(255,255,255,.94);color:#1D2327;border:1px solid #C9CFCB;border-radius:6px;padding:7px 9px;box-shadow:0 1px 3px rgba(0,0,0,.18);max-width:calc(100% - 250px)}
+#secbar[hidden]{display:none}
+#secbar select,#secbar button{font:inherit;font-weight:600;padding:5px 8px;border:1px solid #C9CFCB;border-radius:4px;background:#FFFFFF;color:#1D2327}
+#secbar label{font-size:12.5px;color:#5E676D;display:flex;align-items:center;gap:6px}
+#secbar input[type=range]{width:130px;margin:0}
+#secbar .v{font-variant-numeric:tabular-nums;font-weight:600;color:#1D2327;min-width:34px}
+@media (max-width:760px){ #secbar{max-width:calc(100% - 24px)} }
+#hint{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(255,255,255,.9);color:#1D2327;border:1px solid #C9CFCB;border-radius:4px;padding:5px 9px;font-size:12px;pointer-events:none}
+body.panel-hidden #app{grid-template-columns:1fr}
+body.panel-hidden #panel{display:none}
+#tip{position:absolute;z-index:6;pointer-events:none;background:rgba(255,255,255,.95);color:#1D2327;border:1px solid #C9CFCB;border-radius:4px;padding:6px 9px;font-size:12.5px;box-shadow:0 2px 6px rgba(0,0,0,.15);max-width:260px;display:none}
+#tip b{display:block;font-weight:600}
+#tip span{color:#5E676D}
+.dim{font-size:11.5px;font-weight:600;color:#1F5FA8;background:rgba(255,255,255,.92);padding:1px 5px;border-radius:3px;white-space:nowrap;pointer-events:none;border:1px solid rgba(31,95,168,.45);display:none}
+.show-dims .dim{display:block}
+.rl{font-size:11px;line-height:1.25;color:#1D2327;background:rgba(255,255,255,.88);border:1px solid rgba(0,0,0,.18);border-radius:3px;padding:2px 5px;text-align:center;pointer-events:none;white-space:nowrap}
+.rl b{display:block;font-size:11.5px}
+.rl span{color:#5E676D}
+.tag{font-size:11.5px;font-weight:600;color:#FFFFFF;background:rgba(29,35,39,.78);border-radius:3px;padding:2px 6px;white-space:nowrap;pointer-events:none}
+@media (max-width:760px){
+  #app{grid-template-columns:1fr;grid-template-rows:58% 42%}
+  #panel{order:2;border-right:0;border-top:1px solid var(--rule)}
+  #view{order:1}
+  .bar.left{right:12px}
+  .bar.right{top:auto;bottom:12px}
+  #hint{display:none}
+  body.panel-hidden #app{grid-template-rows:1fr}
+}
+</style>
+</head>
+<body class="panel-hidden">
+<div id="app">
+  <aside id="panel">
+    <h1>1100 6th St, Norco</h1>
+    <p class="sub">Corona church draft, C-4 zone. Lot about 45,900 sq ft at 6th St and Corona Ave. 1 unit = 1 ft.</p>
+
+    <fieldset>
+      <legend>Cutaway views</legend>
+      <div class="views">
+        <button data-cut="ns-sanct">Long · sanctuary</button>
+        <button data-cut="ns-wing">Long · two-story wing</button>
+        <button data-cut="ew-lobby">Cross · lobbies</button>
+        <button data-cut="ew-class">Cross · classrooms</button>
+        <button data-cut="ew-home">Cross · dining + parsonage</button>
+        <button data-cut="ew-stage">Cross · stage + bedrooms</button>
+      </div>
+      <p class="note">Each one slices through both floors. Fine-tune the cut with the bar that appears at the top of the 3D view.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Building position</legend>
+      <div class="row"><label for="wx">West side yard</label><span class="val" id="wxV"></span></div>
+      <input type="range" id="wx" min="0" max="40" step="1" value="12">
+      <div class="row"><label for="rear">Rear yard (south line)</label><span class="val" id="rearV"></span></div>
+      <input type="range" id="rear" min="0" max="20" step="1" value="0">
+      <div class="row"><label for="plaza">Entry plaza depth</label><span class="val" id="plazaV"></span></div>
+      <input type="range" id="plaza" min="10" max="30" step="1" value="15">
+    </fieldset>
+
+    <fieldset>
+      <legend>Roof</legend>
+      <div class="row"><label for="eave">Eave height (ft)</label><input type="number" id="eave" value="24" min="14" max="30" step="1"></div>
+      <div class="row"><label for="ridge">Ridge height (ft)</label><input type="number" id="ridge" value="32" min="18" max="40" step="1"></div>
+      <p class="note">One gable over the whole 100′ × 80′ box, ridge running east–west so the clear span is the 80′ side.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Parking inputs</legend>
+      <div class="row"><label for="seats">Sanctuary seats</label><input type="number" id="seats" value="0" min="50" step="10"></div>
+      <div class="row"><label for="stall">Stall depth (ft)</label><input type="number" id="stall" value="19" min="16" max="20" step="0.5"></div>
+      <div class="row"><label for="aisle">Drive aisle (ft)</label><input type="number" id="aisle" value="24" min="20" max="28" step="1"></div>
+      <p class="note">Seats default to the chairs drawn in the model. Norco 18.38 asks for one space per three seats in a place of assembly.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>C-4 checks</legend>
+      <table id="checks"></table>
+    </fieldset>
+
+    <fieldset>
+      <legend>Key numbers</legend>
+      <table id="out"></table>
+    </fieldset>
+
+    <fieldset>
+      <details open>
+        <summary>Room schedule (deck slide 14)</summary>
+        <table class="sched" id="sched"></table>
+        <p class="note">Hover a room in Cutaway, Section or the floor views to see it.</p>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <details>
+        <summary>Deck cross-check</summary>
+        <p class="note">The model follows the drawn plan on slide 14. Other slides disagree with it:</p>
+        <table id="xcheck"></table>
+      </details>
+    </fieldset>
+
+    <fieldset>
+      <legend>Camera</legend>
+      <div class="views">
+        <button data-view="aerial">Aerial</button>
+        <button data-view="street">From 6th St</button>
+        <button data-view="corona">From Corona Ave</button>
+        <button data-view="plan">Top</button>
+      </div>
+      <p class="note">Lot line, neighbors and street widths are traced from the listing aerial, not surveyed. Verify against the county parcel map before relying on any setback number.</p>
+    </fieldset>
+  </aside>
+  <div id="view">
+    <div class="bar left" role="group" aria-label="Display mode">
+      <button id="togglePanel" class="icon-btn" aria-pressed="false" aria-controls="panel" aria-label="Show panel" title="Show panel"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><line x1="9.5" y1="4.5" x2="9.5" y2="19.5"/></svg></button>
+      <button class="mode" data-mode="exterior" aria-pressed="true">Exterior</button>
+      <button class="mode" data-mode="cutaway" aria-pressed="false">Cutaway</button>
+      <button class="mode" data-mode="section" aria-pressed="false">Section</button>
+      <button class="mode" data-mode="f1" aria-pressed="false">1st floor</button>
+      <button class="mode" data-mode="f2" aria-pressed="false">2nd floor</button>
+    </div>
+    <div class="bar right">
+      <div class="seg" role="group" aria-label="Orbit center">
+        <button class="ctr" data-center="land" aria-pressed="true">Land centered</button>
+        <button class="ctr" data-center="building" aria-pressed="false">Building centered</button>
+      </div>
+      <button id="download">Download HTML</button>
+      <button id="toggleDims" aria-pressed="false">Show dimensions</button>
+      <button id="toggleNeighbors" aria-pressed="true">Hide nearby buildings</button>
+      <button id="toggleLabels" aria-pressed="true" hidden>Hide room labels</button>
+    </div>
+    <div id="secbar" role="group" aria-label="Section cut" hidden>
+      <select id="secPick" aria-label="Cut">
+        <option value="ns-sanct">Long section · sanctuary</option>
+        <option value="ns-wing" selected>Long section · two-story wing</option>
+        <option value="ew-lobby">Cross · lobbies + 2F classrooms</option>
+        <option value="ew-class">Cross · classrooms + 2F meeting/youth</option>
+        <option value="ew-home">Cross · dining + parsonage living</option>
+        <option value="ew-stage">Cross · stage + parsonage bedrooms</option>
+      </select>
+      <label for="secAt">Cut at <input type="range" id="secAt" min="2" max="98" step="1"><span class="v" id="secAtV"></span></label>
+      <button id="secFlip">Look from the other side</button>
+      <button id="secCam" aria-pressed="false">Straight-on</button>
+    </div>
+    <div id="tip"></div>
+    <div id="hint">Drag to orbit · right-drag to pan · scroll to zoom</div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script>
+(function(){
+'use strict';
+const SRC = '<!doctype html>\n' + document.documentElement.outerHTML;
+const $ = id => document.getElementById(id);
+
+// ---------- site data (feet; x = east, z = south, origin = NW lot corner on 6th St) ----------
+const LOT = [[0,0],[204,0],[204,205],[56,205],[56,278],[0,278]];
+const LOT_E = 204, LOT_S = 205;           // Corona Ave line, south line of the main rectangle
+const BW = 100, BD = 80;                 // building footprint, slide 14
+const SW = 9;                             // stall width
+function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const[q,r]=p[i],[s,t]=p[(i+1)%p.length];a+=q*t-s*r;}return Math.abs(a)/2;}
+const LOT_AREA = polyArea(LOT);
+
+// rooms in slide-14 drawing coordinates: X right, Y down, bottom (Y=80) = entry side
+const R1 = [
+  {k:'sanct', X:0, Y:0, w:50,h:70, n:'Sanctuary', kr:'대예배당', t:'sanct'},
+  {k:'lobW',  X:0, Y:70,w:50,h:10, n:'Sanctuary lobby, main entry', kr:'예배당 전면 로비 · 주출입구', t:'lobby'},
+  {k:'lobE',  X:50,Y:70,w:34,h:10, n:'Church lobby, welcome', kr:'교회 로비 · 안내 · 대기', t:'lobby'},
+  {k:'core',  X:84,Y:66,w:16,h:14, n:'Stair + elevator', kr:'계단 · 엘리베이터', t:'core'},
+  {k:'dine',  X:50,Y:0, w:50,h:35, n:'Dining, fellowship', kr:'식당 · 친교실', t:'fellow'},
+  {k:'kit',   X:80,Y:6, w:17,h:22, n:'Kitchen (enclosed)', kr:'주방 (독립 구획)', t:'service', inner:true},
+  {k:'corr',  X:50,Y:35,w:50,h:5,  n:'Service corridor, storage', kr:'식당 서비스 복도 · 수납', t:'circ'},
+  {k:'c1',    X:50,Y:40,w:25,h:15, n:'Classroom 1', kr:'교육실 1', t:'edu'},
+  {k:'c2',    X:75,Y:40,w:25,h:15, n:'Classroom 2, small group', kr:'교육실 2 · 소그룹실', t:'edu'},
+  {k:'wc',    X:50,Y:55,w:25,h:15, n:'Restrooms (M/W, ADA)', kr:'남·여 화장실', t:'service'},
+  {k:'off',   X:75,Y:55,w:25,h:11, n:'Pastor, admin office', kr:'목회자 · 행정 사무실', t:'office'}
+];
+// 2F drawing is 80 × 50; it sits rotated over the right half (X 50–100) of the 1F drawing
+const R2raw = [
+  ['hb',   0,80, 0, 3,'3′ strip','상단 띠 (slide 14)','circ'],
+  ['b1',  0,16, 3,17,'Bedroom 1 (primary)','침실 1 · 마스터','home'],
+  ['b2', 16,28, 3,17,'Bedroom 2','침실 2','home'],
+  ['b3', 28,40, 3,17,'Bedroom 3','침실 3','home'],
+  ['b4',  0,14,17,31,'Bedroom 4','침실 4','home'],
+  ['liv',14,28,17,31,'Living','거실','home'],
+  ['pdn',28,40,17,31,'Dining','식당 (사택)','home'],
+  ['pk',  0,18,31,50,'Kitchen, pantry','주방 · 팬트리','home'],
+  ['bth',18,28,31,50,'Baths 1–2, laundry','욕실 1·2 · 세탁실','home'],
+  ['hal',28,40,31,50,'Hall, closets, mech','복도 · 수납 · 설비','home'],
+  ['e1', 40,60, 3,20,'Classroom 2F-1','교육실 1','edu'],
+  ['e2', 60,80, 3,20,'Classroom 2F-2','교육실 2','edu'],
+  ['mt', 40,60,20,35,'Meeting room','회의실','office'],
+  ['ad', 60,80,20,35,'Admin, staff','행정 · 교역자실','office'],
+  ['yt', 40,65,35,50,'Multipurpose, youth','다목적 · 청소년실','edu'],
+  ['cr2',65,80,35,50,'Stair, elevator, WC','계단 · 엘리베이터 · 화장실','core']
+];
+const R2 = R2raw.map(([k,x1,x2,y1,y2,n,kr,t])=>({k, X:50+y1, Y:x1, w:y2-y1, h:x2-x1, n, kr, t}));
+const COL = {sanct:'#E6D3AE',lobby:'#CFDDEA',fellow:'#E6CDBE',service:'#CDD2D6',circ:'#E7E7E2',edu:'#CFE2CA',office:'#DDD4E8',core:'#BFC5CB',home:'#EFDDBF'};
+
+// ---------- params ----------
+const P = {wx:12, rear:0, plaza:15, eave:24, ridge:32, seats:0, stall:19, aisle:24};
+
+// ---------- three setup ----------
+const view = $('view');
+const renderer = new THREE.WebGLRenderer({antialias:true, logarithmicDepthBuffer:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+view.appendChild(renderer.domElement);
+const labelR = new THREE.CSS2DRenderer();
+Object.assign(labelR.domElement.style,{position:'absolute',top:'0',left:'0',pointerEvents:'none'});
+view.appendChild(labelR.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xDCE5EA);
+scene.fog = new THREE.Fog(0xDCE5EA, 900, 2200);
+const camera = new THREE.PerspectiveCamera(38,1,2,6000);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI*0.495; controls.minDistance = 20; controls.maxDistance = 1600;
+controls.screenSpacePanning = true;
+
+scene.add(new THREE.HemisphereLight(0xFFFFFF, 0xB9B39F, 0.52));
+const sun = new THREE.DirectionalLight(0xFFF6E6, 0.5);
+sun.position.set(260, 420, 120); sun.target.position.set(100,0,140);
+sun.castShadow = true; sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-320,right:320,top:320,bottom:-320,near:10,far:1200});
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.6;
+scene.add(sun, sun.target);
+
+// ---------- materials ----------
+const CLIP = [];                  // building clipping planes, swapped per mode
+const bMats = [];
+const matCache = {};
+function M(color, o={}){
+  const key = color + JSON.stringify(o);
+  if(matCache[key]) return matCache[key];
+  const m = new THREE.MeshLambertMaterial(Object.assign({color}, o.opts||{}));
+  if(o.b){ m.clippingPlanes = CLIP; m.clipShadows = true; bMats.push(m); }
+  return (matCache[key] = m);
+}
+const MB = (c,opts)=>M(c,{b:1,opts});
+
+// ---------- helpers ----------
+function box(x1,z1,x2,z2,y1,y2,mat,parent,shadow=true){
+  const g = new THREE.BoxGeometry(Math.abs(x2-x1)||0.01, Math.abs(y2-y1)||0.01, Math.abs(z2-z1)||0.01);
+  const m = new THREE.Mesh(g, mat);
+  m.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+  if(shadow){ m.castShadow = true; m.receiveShadow = true; }
+  parent.add(m); return m;
+}
+function flat(poly,y,mat,parent){
+  const s = new THREE.Shape(poly.map(([x,z])=>new THREE.Vector2(x,-z)));
+  const m = new THREE.Mesh(new THREE.ShapeGeometry(s), mat);
+  m.rotation.x = -Math.PI/2; m.position.y = y; m.receiveShadow = true;
+  parent.add(m); return m;
+}
+const rect = (x1,z1,x2,z2)=>[[x1,z1],[x2,z1],[x2,z2],[x1,z2]];
+function tri(a,b,c,mat,parent){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute([...a,...b,...c],3));
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function label(html,cls,x,y,z,parent){
+  const d = document.createElement('div'); d.className = cls; d.innerHTML = html;
+  const o = new THREE.CSS2DObject(d); o.position.set(x,y,z); parent.add(o); return o;
+}
+function disposeRoot(root){
+  root.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.isCSS2DObject && o.element.parentNode) o.element.parentNode.removeChild(o.element);
+  });
+  scene.remove(root);
+}
+function dim(a,b,y,text,parent,off=[0,0]){
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a[0]+off[0],y,a[1]+off[1]),new THREE.Vector3(b[0]+off[0],y,b[1]+off[1])]);
+  const l = new THREE.Line(g, new THREE.LineBasicMaterial({color:0x1F5FA8, depthTest:false}));
+  l.renderOrder = 10; parent.add(l);
+  [a,b].forEach(p=>{
+    const t = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(p[0]+off[0],y-2,p[1]+off[1]),new THREE.Vector3(p[0]+off[0],y+2,p[1]+off[1])]);
+    const tl = new THREE.Line(t, l.material); tl.renderOrder = 10; parent.add(tl);
+  });
+  label(text,'dim',(a[0]+b[0])/2+off[0],y,(a[1]+b[1])/2+off[1],parent);
+}
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const ft = n => (Math.round(n*10)/10) + '′';
+
+// ---------- static context: ground, streets, neighbors ----------
+const ctx = new THREE.Group(); scene.add(ctx);
+flat(rect(-700,-700,900,900),-0.3,M('#C9C3AE'),ctx);
+// 6th St (100' ROW): trail on lot side, travel lanes, landscaped median
+flat(rect(-700,-14,900,0),-0.05,M('#D9CBA8'),ctx);         // equestrian trail, south side
+flat(rect(-700,-86,900,-14),-0.1,M('#5B5F63'),ctx);
+flat(rect(-700,-54,900,-46),-0.05,M('#8FA36E'),ctx);       // median
+flat(rect(-700,-100,900,-86),-0.05,M('#D3CFC4'),ctx);      // north walk
+for(let x=-690;x<900;x+=30){ box(x,-31,x+12,-30.5,-0.04,0,M('#F2F2EE'),ctx,false); box(x,-70,x+12,-69.5,-0.04,0,M('#F2F2EE'),ctx,false); }
+// Corona Ave (~60' ROW, estimated)
+flat(rect(204,-14,212,900),-0.05,M('#D3CFC4'),ctx);
+flat(rect(212,-86,256,900),-0.1,M('#5B5F63'),ctx);
+flat(rect(256,-14,266,900),-0.05,M('#D3CFC4'),ctx);
+for(let z=10;z<900;z+=30) box(233.7,z,234.3,z+12,-0.04,0,M('#E9C64B'),ctx,false);
+label('6th St','tag',100,1,-50,ctx);
+label('Corona Ave','tag',234,1,120,ctx);
+// trail rail along 6th St (western motif, visible in the listing photos)
+for(let x=-300;x<=212;x+=10){ if(x>204&&x<212) continue; box(x-0.25,-1.4,x+0.25,-0.9,0,4.2,M('#F4F4F0'),ctx); }
+box(-300,-1.3,204,-1,3.4,3.7,M('#F4F4F0'),ctx); box(-300,-1.3,204,-1,1.8,2.1,M('#F4F4F0'),ctx);
+// street trees
+function tree(x,z,h=26,r=9,parent=ctx){
+  const t = new THREE.Mesh(new THREE.CylinderGeometry(0.8,1.1,h*0.55,6), M('#6E5A44'));
+  t.position.set(x,h*0.27,z); t.castShadow = true; parent.add(t);
+  const c = new THREE.Mesh(new THREE.SphereGeometry(r,8,6), M('#6F8B55'));
+  c.position.set(x,h*0.7,z); c.scale.y = 0.85; c.castShadow = true; parent.add(c);
+  t.userData.tree = c.userData.tree = true;
+}
+[-250,-180,-110,-40,40,110,175].forEach(x=>tree(x,-7,30,10));
+[-260,-160,-60,40,140,240,340].forEach(x=>tree(x,-50,24,8));
+
+const neigh = new THREE.Group(); scene.add(neigh);
+const NB = [
+  // west: commercial / light-industrial buildings
+  [-111,236,-55,282,20,'#B9BDC0'],[-185,236,-115,282,20,'#B9BDC0'],[-92,139,-55,194,18,'#C3C0B6'],
+  [-148,125,-102,171,18,'#B9BDC0'],[-139,42,-92,88,16,'#C9A98A'],[-240,9,-180,171,16,'#D6D2C6'],
+  // south: houses in the notch and beyond
+  [130,222,195,259,13,'#D8CCB8'],[93,255,120,282,12,'#D2C2AA'],[121,305,167,352,13,'#C9B79C'],[28,292,88,343,13,'#B98C6E'],
+  // east across Corona
+  [300,231,360,278,13,'#D8CCB8'],[300,167,352,222,13,'#CFC4B2'],[300,93,352,139,13,'#D8CCB8'],[310,10,368,60,13,'#CDBFAA'],
+  // north across 6th St
+  [111,-150,204,-112,14,'#D8D2C4'],[0,-150,80,-115,14,'#CFC8B8'],[-80,-150,-20,-112,14,'#D8D2C4']
+];
+NB.forEach(([x1,z1,x2,z2,h,c])=>{
+  box(x1,z1,x2,z2,0,h,M(c),neigh);
+  const w = x2-x1, d = z2-z1, along = w>=d;
+  const rise = Math.min(w,d)*0.18, roof = M('#7D7468');
+  if(along){ const zm=(z1+z2)/2;
+    tri([x1,h,z1],[x1,h+rise,zm],[x1,h,z2],roof,neigh); tri([x2,h,z2],[x2,h+rise,zm],[x2,h,z1],roof,neigh);
+    const sl = Math.hypot(d/2,rise), ang = Math.atan2(rise,d/2);
+    const a = box(x1,0,x2,sl,0,0.4,roof,neigh); a.position.set((x1+x2)/2,h+rise/2,(z1+zm)/2); a.rotation.x=-ang;
+    const b = box(x1,0,x2,sl,0,0.4,roof,neigh); b.position.set((x1+x2)/2,h+rise/2,(zm+z2)/2); b.rotation.x=ang;
+  } else { const xm=(x1+x2)/2;
+    const sl = Math.hypot(w/2,rise), ang = Math.atan2(rise,w/2);
+    const a = box(0,z1,sl,z2,0,0.4,roof,neigh); a.position.set((x1+xm)/2,h+rise/2,(z1+z2)/2); a.rotation.z=ang;
+    const b = box(0,z1,sl,z2,0,0.4,roof,neigh); b.position.set((xm+x2)/2,h+rise/2,(z1+z2)/2); b.rotation.z=-ang;
+  }
+});
+[[-30,215],[-40,100],[160,300],[240,300],[285,200],[285,40],[70,360]].forEach(([x,z])=>tree(x,z,24,9,neigh));
+
+// ---------- geometry state ----------
+let G = null, L = null;
+function layout(){
+  const bx0 = P.wx, bz0 = LOT_S - BD - P.rear, bx2 = bx0 + BW, bz2 = bz0 + BD;
+  const S = P.stall, A = P.aisle;
+  const colL = [bx2+6, bx2+6+S], aisle = [colL[1], colL[1]+A], colR = [aisle[1], aisle[1]+S];
+  const hasR = LOT_E - colR[1] >= 5;
+  const zEnd = bz0 - P.plaza;
+  // front parking bands (stall/aisle) from the 5' street landscape strip toward the building
+  const bands = []; let z = 5;
+  while(zEnd - z >= 2*S + A){ bands.push(['S',z,z+S],['A',z+S,z+S+A],['S',z+S+A,z+2*S+A]); z += 2*S+A; }
+  if(zEnd - z >= S + A){ bands.push(['S',z,z+S],['A',z+S,z+S+A]); z += S+A; }
+  const frontEnd = z;
+  const dw = [20,46];                // 6th St driveway, kept ~160' from the corner
+  const cg = [150,176];              // Corona driveway
+  const stalls = [];
+  const fx1 = 1, fx2 = aisle[0];
+  bands.forEach(([t,z1,z2],i)=>{
+    if(t!=='S') return;
+    const n = Math.floor((fx2-fx1)/SW);
+    for(let k=0;k<n;k++){
+      const x1 = fx1 + k*SW, x2 = x1+SW;
+      if(z1===5 && x2>dw[0] && x1<dw[1]) continue;
+      stalls.push({x1,z1,x2,z2,dir:'z'});
+    }
+  });
+  if(frontEnd < bz0+BD){
+    const n = Math.floor((LOT_S - 1 - frontEnd)/SW);
+    for(let k=0;k<n;k++) stalls.push({x1:colL[0],z1:frontEnd+k*SW,x2:colL[1],z2:frontEnd+(k+1)*SW,dir:'x'});
+  }
+  if(hasR){
+    for(let zz=5; zz+SW<=LOT_S-1; zz+=SW){
+      if(zz+SW>cg[0] && zz<cg[1]){ zz = cg[1]-SW; continue; }
+      stalls.push({x1:colR[0],z1:zz,x2:colR[1],z2:zz+SW,dir:'x'});
+    }
+  }
+  // accessible stalls: 4 nearest the sanctuary entry in the row next to the plaza
+  const ex = bx0 + 75, lastRow = Math.max(...stalls.filter(s=>s.dir==='z').map(s=>s.z2));
+  stalls.filter(s=>s.dir==='z' && s.z2===lastRow).sort((a,b)=>Math.abs((a.x1+a.x2)/2-ex)-Math.abs((b.x1+b.x2)/2-ex)).slice(0,4).forEach(s=>s.ada=true);
+  return {bx0,bz0,bx2,bz2,S,A,colL,aisle,colR,hasR,bands,frontEnd,dw,cg,stalls,fx1,fx2};
+}
+function W(r){ // drawing rect → world rect
+  const {bx0,bz0} = L;
+  return [bx0+BW-r.X-r.w, bz0+BD-r.Y-r.h, bx0+BW-r.X, bz0+BD-r.Y];
+}
+
+// ---------- build ----------
+let chairCount = 0, landArea = 0;
+function build(){
+  if(G) disposeRoot(G.root);
+  L = layout();
+  const root = new THREE.Group(); scene.add(root);
+  G = {root, site:new THREE.Group(), shell:new THREE.Group(), roof:new THREE.Group(), f1:new THREE.Group(), f2:new THREE.Group(),
+       lab1:new THREE.Group(), lab2:new THREE.Group(), labS:new THREE.Group(), dims:new THREE.Group(), pick:[]};
+  Object.values(G).forEach(g=>{ if(g && g.isObject3D && g!==root) root.add(g); });
+  buildSite(); buildShell(); buildInterior(); buildDims();
+  updatePanel(); applyMode();
+}
+
+function buildSite(){
+  const g = G.site, {bx0,bz0,bx2,bz2,colL,aisle,colR,hasR,bands,frontEnd,dw,cg,stalls} = L;
+  flat(LOT,0.02,M('#D8CDB2'),g);                                     // graded pad / DG
+  const asph = M('#4A4E52'), line = M('#F2F2EE'), green = M('#86A060'), conc = M('#D9D6CE');
+  // asphalt
+  flat(rect(1,5,aisle[0],frontEnd),0.12,asph,g);
+  flat(rect(aisle[0],5,aisle[1],LOT_S-1),0.12,asph,g);
+  flat(rect(colL[0],frontEnd,colL[1],LOT_S-1),0.12,asph,g);
+  if(hasR) flat(rect(colR[0],5,colR[1],LOT_S-1),0.12,asph,g);
+  flat(rect(dw[0],-14,dw[1],5),0.12,asph,g);                       // 6th St driveway
+  const cgx = hasR ? colR[1] : aisle[1];
+  flat(rect(cgx,cg[0],212,cg[1]),0.12,asph,g);                     // Corona driveway
+  // stripes
+  stalls.forEach(s=>{
+    if(s.ada) flat(rect(s.x1+0.4,s.z1+0.4,s.x2-0.4,s.z2-0.4),0.2,M('#2F5F9E'),g);
+    if(s.dir==='z'){ box(s.x1-0.17,s.z1,s.x1+0.17,s.z2,0.12,0.26,line,g,false); box(s.x2-0.17,s.z1,s.x2+0.17,s.z2,0.12,0.26,line,g,false); }
+    else { box(s.x1,s.z1-0.17,s.x2,s.z1+0.17,0.12,0.26,line,g,false); box(s.x1,s.z2-0.17,s.x2,s.z2+0.17,0.12,0.26,line,g,false); }
+  });
+  // landscape: 5' street strip (18.23.32), Corona buffer, west strip, tail yard
+  landArea = 0;
+  const addL = (r,mat=green)=>{ flat(r,0.3,mat,g); landArea += polyArea(r); };
+  addL(rect(0,0,dw[0],5)); addL(rect(dw[1],0,LOT_E,5));
+  const bx = hasR ? colR[1] : aisle[1];
+  if(LOT_E - bx > 0){ addL(rect(bx,5,LOT_E,cg[0])); addL(rect(bx,cg[1],LOT_E,LOT_S)); }
+  addL(rect(0,LOT_S,56,278),M('#9CB46F'));                          // parsonage yard / play lawn
+  // plaza, walks, west service yard
+  flat(rect(0,frontEnd,colL[0],bz0),0.2,conc,g);
+  flat(rect(bx2,bz0,colL[0],LOT_S),0.2,conc,g);
+  if(bx0>0) flat(rect(0,bz0,bx0,LOT_S),0.2,conc,g);
+  // plaza planters + trees
+  const pz1 = frontEnd+2, pz2 = Math.max(frontEnd+4, bz0-12);
+  if(pz2-pz1 > 2){ [[bx0+5,bx0+30],[bx0+70,bx0+95]].forEach(([a,b])=>{ addL(rect(a,pz1,b,Math.min(pz2,pz1+5))); tree((a+b)/2,pz1+2.5,20,6,g); }); }
+  [[LOT_E-10,40],[LOT_E-10,95],[LOT_E-10,200]].forEach(([x,z])=>tree(x,z,26,8,g));
+  tree(28,240,22,8,g);
+  // 6' masonry wall where the lot backs onto the houses (18.23.22)
+  const wall = M('#B9AE9C');
+  box(56,LOT_S-0.5,LOT_E,LOT_S,0,6,wall,g); box(56,LOT_S,56.5,278,0,6,wall,g); box(0,277.5,56.5,278,0,6,wall,g);
+  // trash enclosure, NW of the building in the west yard
+  if(bx0>=10) box(1,frontEnd-0.01+1,Math.min(bx0-1,11),frontEnd+9,0,6,M('#A39C8F'),g);
+  // lot line
+  const pts = LOT.concat([LOT[0]]).map(([x,z])=>new THREE.Vector3(x,0.25,z));
+  const ll = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({color:0xC0392B,dashSize:4,gapSize:3}));
+  ll.computeLineDistances(); g.add(ll);
+}
+
+function buildShell(){
+  const {bx0,bz0,bx2,bz2} = L, E = P.eave, Rg = Math.max(P.ridge, P.eave+1), zm = (bz0+bz2)/2, T = 0.8;
+  const g = G.shell, wallM = MB('#E8E1D3'), batten = MB('#D6CCB8'), door = MB('#5A4636'), wood = MB('#8A6A4A'), frame = MB('#3B3F42');
+  const glass = MB('#9CC4DA',{transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide});
+  // openings, measured along each wall from its west (north wall) or north (side walls) end: [a1, a2, y1, y2, kind]
+  const OPN = {
+    n: [], w: [], e: []
+  };
+  [56,64,80,88,18,34,42].forEach(a=>OPN.n.push([a,a+6,0.5,10,'g']));      // lobby storefronts
+  OPN.n.push([72,78,0,9,'d'],[26,32,0,9,'d']);                             // main doors
+  for(let a=4; a<46; a+=9) OPN.n.push([a,a+5,15,20,'g']);                   // 2F windows
+  for(let a=5; a<BD-4; a+=9) OPN.w.push([a,a+5,15,20,'g']);
+  [[26,34],[36,46],[56,64],[66,74]].forEach(([a,b])=>OPN.w.push([a,b,3,9,'g']));
+  OPN.w.push([48,52,0,8,'d']);                                               // kitchen service door
+  if(E-2 > 15) for(let a=10; a<BD-8; a+=10) OPN.e.push([a,a+6,14,E-2,'g']); // sanctuary clerestory
+  OPN.e.push([20,26,0,8,'d'],[BD-14,BD-8,0,8,'d']);                         // side exits
+  // wall built from solid pieces around each opening (piers, sills, headers), so openings are real gaps
+  function holeWall(len, ops, place){
+    const grp = new THREE.Group();
+    const cuts = [...new Set([0,len,...ops.flatMap(o=>[o[0],o[1]])])].sort((a,b)=>a-b);
+    for(let i=0;i<cuts.length-1;i++){
+      const a1 = cuts[i], a2 = cuts[i+1]; if(a2-a1<1e-3) continue;
+      const gaps = ops.filter(o=>o[0]<a2-1e-3 && o[1]>a1+1e-3).map(o=>[o[2],o[3]]).sort((p,q)=>p[0]-q[0]);
+      let y = 0;
+      gaps.concat([[E,E]]).forEach(([g1,g2])=>{
+        if(g1-y>1e-3){ const m = new THREE.Mesh(new THREE.BoxGeometry(a2-a1,g1-y,T), wallM); m.position.set((a1+a2)/2,(y+g1)/2,T/2); m.castShadow = m.receiveShadow = true; grp.add(m); }
+        y = Math.max(y,g2);
+      });
+    }
+    place(grp); g.add(grp);
+  }
+  // walls with real openings, so the glass can be seen through
+  holeWall(BW, OPN.n, m=>m.position.set(bx0,0,bz0));
+  holeWall(BD, OPN.w, m=>{ m.rotation.y = -Math.PI/2; m.position.set(bx0+T,0,bz0); });
+  holeWall(BD, OPN.e, m=>{ m.rotation.y = -Math.PI/2; m.position.set(bx2,0,bz0); });
+  box(bx0,bz2-T,bx2,bz2,0,E,wallM,g);
+  // glass panes, thin frames and doors set into the openings
+  const fill = (side,[a1,a2,y1,y2,k])=>{
+    const mat = k==='d' ? door : glass, sh = k==='d';
+    if(side==='n'){ const z = bz0+T/2; box(bx0+a1,z-0.06,bx0+a2,z+0.06,y1,y2,mat,g,sh);
+      if(k==='g'){ box(bx0+a1,bz0-0.05,bx0+a2,bz0+0.15,y1-0.25,y1,frame,g,false); box(bx0+a1,bz0-0.05,bx0+a2,bz0+0.15,y2,y2+0.25,frame,g,false);
+        box(bx0+a1,bz0-0.05,bx0+a1+0.25,bz0+0.15,y1,y2,frame,g,false); box(bx0+a2-0.25,bz0-0.05,bx0+a2,bz0+0.15,y1,y2,frame,g,false); } }
+    else { const x = side==='w' ? bx0+T/2 : bx2-T/2, xo = side==='w' ? bx0 : bx2;
+      box(x-0.06,bz0+a1,x+0.06,bz0+a2,y1,y2,mat,g,sh);
+      if(k==='g'){ box(xo-0.1,bz0+a1,xo+0.1,bz0+a2,y1-0.25,y1,frame,g,false); box(xo-0.1,bz0+a1,xo+0.1,bz0+a2,y2,y2+0.25,frame,g,false);
+        box(xo-0.1,bz0+a1,xo+0.1,bz0+a1+0.25,y1,y2,frame,g,false); box(xo-0.1,bz0+a2-0.25,xo+0.1,bz0+a2,y1,y2,frame,g,false); } }
+  };
+  ['n','w','e'].forEach(sd=>OPN[sd].forEach(o=>fill(sd,o)));
+  // gable ends (east, west) + interior separation wall between sanctuary and the two-story half
+  const gm = MB('#E8E1D3',{side:THREE.DoubleSide});
+  [bx0+T/2, bx2-T/2].forEach(x=>tri([x,E,bz0],[x,Rg,zm],[x,E,bz2],gm,g));
+  // board-and-batten rhythm on long walls (western motif)
+  // battens skip the openings on the north wall
+  for(let x=bx0+4;x<bx2;x+=4){
+    const a = x-bx0, hit = OPN.n.find(([a1,a2])=>a>a1-0.4 && a<a2+0.4);
+    if(hit){ box(x-0.2,bz0-0.15,x+0.2,bz0,hit[3],E,batten,g,false); if(hit[2]>0.5) box(x-0.2,bz0-0.15,x+0.2,bz0,0,hit[2],batten,g,false); }
+    else box(x-0.2,bz0-0.15,x+0.2,bz0,0,E,batten,g,false);
+    box(x-0.2,bz2,x+0.2,bz2+0.15,0,E,batten,g,false);
+  }
+  // front porch (western covered walk) across the entry façade
+  const pd = Math.min(10, P.plaza-2);
+  if(pd>3){
+    const roofM = MB('#5D5A55');
+    for(let x=bx0+2; x<=bx2-2; x+=12) box(x-0.4,bz0-pd,x+0.4,bz0-pd+0.8,0,10.5,wood,g);
+    const pr = box(bx0,bz0-pd-1,bx2,bz0,0,0,roofM,g); pr.scale.y = 1;
+    pr.geometry.dispose(); pr.geometry = new THREE.BoxGeometry(BW+2, 0.5, pd+1.5);
+    pr.position.set((bx0+bx2)/2, 11.2, bz0-(pd+1.5)/2+0.3); pr.rotation.x = -0.06;
+    box(bx0,bz0-pd-0.6,bx2,bz0-pd,10.3,10.9,wood,g);
+  }
+  // roof: two planes, 2' overhang
+  const oh = 2, run = BD/2, rise = Rg-E, ang = Math.atan2(rise,run), slope = rise/run;
+  const len = Math.hypot(run+oh, rise+oh*slope), rm = MB('#46494C');
+  [[-1,bz0-oh],[1,bz2+oh]].forEach(([s,ze])=>{
+    const m = new THREE.Mesh(new THREE.BoxGeometry(BW+2*oh,0.7,len), rm);
+    const ye = E - oh*slope;
+    m.position.set((bx0+bx2)/2,(ye+Rg)/2+0.35,(ze+zm)/2);
+    m.rotation.x = s<0 ? -ang : ang;
+    m.castShadow = true; m.receiveShadow = true; G.roof.add(m);
+  });
+  // standing seams
+  for(let x=bx0-oh+2; x<bx2+oh; x+=3){
+    [[-1,bz0-oh],[1,bz2+oh]].forEach(([s,ze])=>{
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.15,0.2,len), MB('#3A3D40'));
+      m.position.set(x,(E-oh*slope+Rg)/2+0.75,(ze+zm)/2); m.rotation.x = s<0 ? -ang : ang; G.roof.add(m);
+    });
+  }
+  // exposed PEMB frames every 20' (visible in the sanctuary)
+  const fm = MB('#7C5A3C');
+  for(let x=bx0+10; x<bx2; x+=20){
+    [[bz0+T,1],[bz2-T,-1]].forEach(([z0,s])=>{
+      const m = new THREE.Mesh(new THREE.BoxGeometry(0.9,1.6,Math.hypot(run,rise)), fm);
+      m.position.set(x,(E+Rg)/2-1,(z0+zm)/2); m.rotation.x = s>0 ? -ang : ang; m.castShadow = true; G.roof.add(m);
+    });
+    box(x-0.45,bz0+run*0.35,x+0.45,bz2-run*0.35,E+rise*0.35-1.2,E+rise*0.35-0.4,fm,G.roof);
+  }
+}
+
+function roomTile(r,y,parent){
+  const [x1,z1,x2,z2] = W(r);
+  const m = flat(rect(x1,z1,x2,z2),y,MB(COL[r.t],{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4}),parent);
+  m.userData.room = r; G.pick.push(m);
+  return [x1,z1,x2,z2];
+}
+function partitions(r,y1,y2,parent,mat){
+  // skip any edge that sits on the exterior wall, so windows are not blocked from inside
+  const [x1,z1,x2,z2] = W(r), t = 0.25, {bx0,bz0,bx2,bz2} = L, on = (a,b)=>Math.abs(a-b)<0.01;
+  if(!on(z1,bz0)) box(x1,z1,x2,z1+t,y1,y2,mat,parent);
+  if(!on(z2,bz2)) box(x1,z2-t,x2,z2,y1,y2,mat,parent);
+  if(!on(x1,bx0)) box(x1,z1,x1+t,z2,y1,y2,mat,parent);
+  if(!on(x2,bx2)) box(x2-t,z1,x2,z2,y1,y2,mat,parent);
+}
+function buildInterior(){
+  const {bx0,bz0,bx2,bz2} = L, E = P.eave, Rg = Math.max(P.ridge,E+1), zm = (bz0+bz2)/2;
+  const pm = MB('#F3EFE6'), sm = MB('#C9C3B8');
+  box(bx0,bz0,bx2,bz2,-0.6,0.3,MB('#BDB7AA'),G.f1);
+  // 1F rooms
+  R1.forEach(r=>{
+    const [x1,z1,x2,z2] = roomTile(r, r.inner?0.6:0.45, G.f1);
+    if(r.k!=='sanct') partitions(r,0,12,G.f1,pm);
+    const a = r.w*r.h;
+    label(`<b>${r.n}</b><span>${r.kr}</span><br><span>${r.w}′ × ${r.h}′ · ${fmt(a)} sq ft</span>`,'rl',(x1+x2)/2,1,(z1+z2)/2,G.lab1);
+  });
+  // 2-hour separation between sanctuary volume and the two-story half, full height to the roof
+  const xs = bx0+50, sep = MB('#E1D9C9',{side:THREE.DoubleSide});
+  box(xs-0.4,bz0,xs+0.4,bz2,0,E,sep,G.f1);
+  tri([xs,E,bz0],[xs,Rg,zm],[xs,E,bz2],sep,G.f1);
+  // sanctuary: platform, LED wall, chairs
+  const pl = W({X:5,Y:5,w:40,h:11});
+  const md = W({X:18,Y:63,w:14,h:4}); box(md[0],md[1],md[2],md[3],0.3,3.3,MB('#6B5B4B'),G.f1);
+  box(pl[0],pl[1],pl[2],pl[3],0,2,MB('#8A6A4A'),G.f1);
+  box(bx0+56,bz2-1.6,bx2-6,bz2-1,6,18,MB('#1F2A33'),G.f1);
+  chairCount = 0;
+  const seat = new THREE.BoxGeometry(1.5,1.6,1.6), cm = MB('#5C6C7A');
+  const spots = [];
+  for(let Y=21; Y<=59; Y+=3){
+    for(let X=8; X+1.75<=22.5; X+=1.75) spots.push([X+0.875,Y]);
+    for(let X=27.5; X+1.75<=42; X+=1.75) spots.push([X+0.875,Y]);
+  }
+  const inst = new THREE.InstancedMesh(seat, cm, spots.length);
+  const mtx = new THREE.Matrix4();
+  spots.forEach(([X,Y],i)=>{ mtx.makeTranslation(bx0+BW-X,1.1,bz0+BD-Y); inst.setMatrixAt(i,mtx); });
+  inst.castShadow = true; G.f1.add(inst); chairCount = spots.length;
+  // dining tables
+  const tg = new THREE.CylinderGeometry(2.6,2.6,2.5,16), tm = MB('#B89A74');
+  for(let X=58; X<=74; X+=8) for(let Y=11; Y<=29; Y+=9){ const t = new THREE.Mesh(tg,tm); t.position.set(bx0+BW-X,1.55,bz0+BD-Y); G.f1.add(t); }
+  const kc = W({X:81,Y:7,w:15,h:3}); box(kc[0],kc[1],kc[2],kc[3],0,3,MB('#9AA1A6'),G.f1);
+  const kc2 = W({X:81,Y:24,w:15,h:3}); box(kc2[0],kc2[1],kc2[2],kc2[3],0,3,MB('#9AA1A6'),G.f1);
+  // stair A (1F → 2F)
+  const st = W({X:86,Y:68,w:5,h:11});
+  for(let i=0;i<12;i++){ const z = st[3]-(i+1)*(11/12); box(st[0],z,st[2],z+11/12,0,(i+1)*1.08,MB('#B8B2A6'),G.f1); }
+  // 2F slab + rooms
+  box(bx0,bz0,bx0+50,bz2,12,13,MB('#BDB7AA'),G.f2);
+  R2.forEach(r=>{
+    const [x1,z1,x2,z2] = roomTile(r,13.15,G.f2);
+    partitions(r,13,23,G.f2,pm);
+    label(`<b>${r.n}</b><span>${r.kr}</span><br><span>${r.w}′ × ${r.h}′ · ${fmt(r.w*r.h)} sq ft</span>`,'rl',(x1+x2)/2,14,(z1+z2)/2,G.lab2);
+  });
+  label('<b>Open to sanctuary below</b><span>대예배당 상부 (High vault)</span>','rl',bx0+75,14,bz0+22,G.lab2);
+}
+
+function buildDims(){
+  const g = G.dims, {bx0,bz0,bx2,bz2} = L, y = 1.5;
+  dim([0,0],[LOT_E,0],y,'204′ on 6th St',g,[0,-6]);
+  dim([LOT_E,0],[LOT_E,LOT_S],y,'205′ on Corona',g,[6,0]);
+  dim([0,LOT_S],[0,278],y,'73′',g,[-6,0]);
+  dim([0,278],[56,278],y,'56′',g,[0,6]);
+  dim([bx0,bz0],[bx2,bz0],P.eave+2,'100′',g,[0,-2]);
+  dim([bx2,bz0],[bx2,bz2],P.eave+2,'80′',g,[2,0]);
+  dim([bx0+25,0],[bx0+25,bz0],y,`front yard ${ft(bz0)}`,g);
+  if(bx0>0) dim([0,bz0+20],[bx0,bz0+20],y,ft(bx0),g);
+  if(P.rear>0) dim([bx0+80,bz2],[bx0+80,LOT_S],y,ft(P.rear),g);
+  dim([bx2,bz0+40],[LOT_E,bz0+40],y,`${ft(LOT_E-bx2)} to Corona`,g);
+  const zm=(bz0+bz2)/2;
+  const v = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(bx2+4,0,zm),new THREE.Vector3(bx2+4,P.ridge,zm)]);
+  const vl = new THREE.Line(v,new THREE.LineBasicMaterial({color:0x1F5FA8,depthTest:false})); vl.renderOrder=10; g.add(vl);
+  label(`ridge ${ft(P.ridge)} · eave ${ft(P.eave)}`,'dim',bx2+4,P.ridge+3,zm+10,g);
+}
+
+// ---------- panel ----------
+function updatePanel(){
+  const {bx0,bz0,bx2,bz2,stalls,hasR} = L;
+  const seats = P.seats || chairCount;
+  const need = Math.ceil(seats/3), have = stalls.length;
+  const landPct = landArea/LOT_AREA*100;
+  const headroom = P.eave - 13;
+  const rows = [
+    ['Church use (18.23.04 I.6)', 'P, by right', true],
+    ['Front yard ≥ 30′', ft(bz0), bz0>=30],
+    ['Exterior side yard ≥ 10′ (Corona)', ft(LOT_E-bx2), LOT_E-bx2>=10],
+    ['Height ≤ 35′', ft(P.ridge), P.ridge<=35],
+    ['Landscaping ≥ 5% of lot', landPct.toFixed(1)+'%', landPct>=5],
+    ['5′ landscape along both streets', hasR ? 'yes' : 'Corona strip lost', hasR],
+    [`Parking 1 per 3 seats (${seats} seats)`, `${have} of ${need}`, have>=need],
+    ['12′ side yard if rear yard (18.23.14 C)', P.rear>0 ? (bx0>=12?'west '+ft(bx0):'needs 12′') : 'no rear yard', P.rear===0 || bx0>=12],
+    ['2F headroom at eave walls (10′ planned)', ft(headroom), headroom>=10],
+    ['2F corridor ≥ 44″ (CBC 1020.2)', '3′ strip', false]
+  ];
+  $('checks').innerHTML = rows.map(([a,b,ok])=>`<tr><td>${a}</td><td class="${ok?'ok':'bad'}">${b}</td></tr>`).join('');
+  const zm = 40, pitch = (P.ridge-P.eave)/zm*12;
+  $('out').innerHTML = [
+    ['Lot area <small>(traced)</small>', fmt(LOT_AREA)+' sq ft'],
+    ['Footprint', '100′ × 80′ = 8,000 sq ft'],
+    ['Second floor', '50′ × 80′ = 4,000 sq ft'],
+    ['Total floor area', '12,000 sq ft'],
+    ['Lot coverage <small>(no C-4 limit)</small>', (8000/LOT_AREA*100).toFixed(1)+'%'],
+    ['Roof pitch', pitch.toFixed(1)+':12'],
+    ['Chairs as drawn', String(chairCount)],
+    ['Parking provided <small>(4 accessible)</small>', String(have)],
+    ['Landscaped area', fmt(landArea)+' sq ft']
+  ].map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('');
+  const sw = t=>`<span class="sw" style="background:${COL[t]}"></span>`;
+  const sr = r=>`<tr><td>${sw(r.t)}</td><td>${r.n}<br><small>${r.kr}</small></td><td>${fmt(r.w*r.h)}</td></tr>`;
+  $('sched').innerHTML = `<tr class="fl"><td></td><td>1st floor</td><td>8,000</td></tr>` + R1.map(sr).join('') +
+    `<tr class="fl"><td></td><td>2nd floor</td><td>4,000</td></tr>` + R2.map(sr).join('');
+  $('xcheck').innerHTML = [
+    ['Footprint','100′ × 80′','76′ × 92′ (slides 18–19)'],
+    ['Eave / ridge','24′ / 32′ here','18′ / 30′ (slides 18–19)'],
+    ['2F location','west half, full depth','front 40′ only (slide 18)'],
+    ['2F area in m²','371.6 m²','472 m² (slides 1, 11)'],
+    ['Sanctuary','50′ × 70′ = 3,500','3,000 incl. stage (slide 12)'],
+    ['Dining','1,750','2,000 (slide 12)'],
+    ['Kitchen','374','500 (slide 12)'],
+    ['2F program','classrooms, meeting, youth','1,500 auditorium + 1,000 storage (slide 13)'],
+    ['1F stair','added 16′ × 14′','none drawn (slide 14)']
+  ].map(([a,b,c])=>`<tr><td>${a}<br><small>deck: ${c}</small></td><td>${b}</td></tr>`).join('');
+  if(!P.seats) $('seats').placeholder = String(chairCount);
+  ['wx','rear','plaza'].forEach(k=>$(k+'V').textContent = P[k]+'′');
+}
+
+// ---------- modes & cameras ----------
+let mode = 'exterior', center = 'land', showNeighbors = true, showLabels = true;
+const planeY = new THREE.Plane(new THREE.Vector3(0,-1,0), 0);
+const planeX = new THREE.Plane(new THREE.Vector3(1,0,0), 0);
+function setClip(list){ CLIP.length = 0; list.forEach(p=>CLIP.push(p)); bMats.forEach(m=>m.needsUpdate = true); }
+function applyMode(){
+  if(!G) return;
+  const {bx0} = L;
+  G.roof.visible = mode==='exterior' || mode==='section';
+  G.f2.visible = mode!=='f1';
+  G.lab1.children.forEach(o=>o.visible = showLabels && mode==='f1');
+  G.lab2.children.forEach(o=>o.visible = showLabels && mode==='f2');
+  $('toggleLabels').hidden = !(mode==='f1' || mode==='f2' || mode==='section');
+  $('secbar').hidden = mode!=='section';
+  sectionLabels();
+  if(mode==='exterior') setClip([]);
+  else if(mode==='cutaway'){ planeY.constant = 23.5; setClip([planeY]); }
+  else if(mode==='f1'){ planeY.constant = 10; setClip([planeY]); }
+  else if(mode==='f2'){ planeY.constant = 22; setClip([planeY]); }
+  else if(mode==='section'){ const c = secGeom(); planeX.normal.copy(c.n); planeX.constant = c.c; setClip([planeX]); }
+  G.site.children.forEach(o=>{ if(o.userData.tree) o.visible = mode!=='section'; });
+  G.shell.visible = true;
+  neigh.visible = showNeighbors && !['f1','f2','section'].includes(mode);
+  document.querySelectorAll('.mode').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.mode===mode)));
+}
+// ---------- section cuts (like the cutaway renders in the deck) ----------
+const SECS = {
+  'ns-sanct': {ax:'x', at:70}, 'ns-wing': {ax:'x', at:30},
+  'ew-lobby': {ax:'z', at:8},  'ew-class': {ax:'z', at:32},
+  'ew-home':  {ax:'z', at:54}, 'ew-stage': {ax:'z', at:72}
+};
+const sec = {k:'ns-wing', at:30, flip:false, straight:false};
+function secGeom(){
+  // nudge the cut off whole-foot lines so it never lands exactly on a wall face (that is what made the speckled wall)
+  const s = SECS[sec.k], {bx0,bz0} = L, at = sec.at + 0.13;
+  if(s.ax==='x'){ const X0 = bx0+at, keepWest = !sec.flip;
+    return {ax:'x', pos:X0, n:new THREE.Vector3(keepWest?-1:1,0,0), c:keepWest?X0:-X0, focus:new THREE.Vector3(X0,13,bz0+40)}; }
+  const Z0 = bz0+at, keepSouth = !sec.flip;
+  return {ax:'z', pos:Z0, n:new THREE.Vector3(0,0,keepSouth?1:-1), c:keepSouth?-Z0:Z0, focus:new THREE.Vector3(bx0+50,13,Z0)};
+}
+function sectionLabels(){
+  G.labS.children.slice().forEach(o=>{ if(o.element.parentNode) o.element.parentNode.removeChild(o.element); G.labS.remove(o); });
+  if(mode!=='section' || !showLabels) return;
+  const c = secGeom();
+  [[R1,6],[R2,18]].forEach(([rooms,y])=>rooms.forEach(r=>{
+    const [x1,z1,x2,z2] = W(r);
+    if(r.k==='hb') return;
+    if(c.ax==='x' ? (c.pos>x1+0.1 && c.pos<x2-0.1) : (c.pos>z1+0.1 && c.pos<z2-0.1)){
+      const x = c.ax==='x' ? c.pos : (x1+x2)/2, z = c.ax==='z' ? c.pos : (z1+z2)/2;
+      label(`<b>${r.n}</b><span>${r.kr}</span>`,'rl',x,r.k==='sanct'?10:y,z,G.labS);
+    }
+  }));
+}
+function secCam(){
+  const c = secGeom(), back = c.n.clone().negate();
+  const yaw = sec.straight ? 0 : THREE.MathUtils.degToRad(sec.flip ? -28 : 28), el = THREE.MathUtils.degToRad(sec.straight ? 4 : 17);
+  const dir = back.applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+  const D = c.ax==='x' ? 125 : 140;
+  camera.fov = sec.straight ? 34 : 42; camera.updateProjectionMatrix();
+  camera.position.set(c.focus.x + dir.x*D*Math.cos(el), c.focus.y + D*Math.sin(el), c.focus.z + dir.z*D*Math.cos(el));
+  controls.target.copy(c.focus); controls.update();
+}
+function syncSecUI(){
+  const s = SECS[sec.k];
+  $('secAt').max = s.ax==='x' ? 98 : 78; $('secAt').value = sec.at;
+  $('secAtV').textContent = sec.at + '′ ' + (s.ax==='x' ? 'from west wall' : 'from front wall');
+  $('secCam').setAttribute('aria-pressed', String(sec.straight));
+}
+$('secPick').addEventListener('change',e=>{ sec.k = e.target.value; sec.at = SECS[sec.k].at; sec.flip = false; syncSecUI(); applyMode(); secCam(); });
+$('secAt').addEventListener('input',e=>{ sec.at = +e.target.value; syncSecUI(); applyMode(); });
+$('secFlip').addEventListener('click',()=>{ sec.flip = !sec.flip; applyMode(); secCam(); });
+$('secCam').addEventListener('click',()=>{ sec.straight = !sec.straight; syncSecUI(); secCam(); });
+syncSecUI();
+document.querySelectorAll('[data-cut]').forEach(b=>b.addEventListener('click',()=>{
+  sec.k = b.dataset.cut; sec.at = SECS[sec.k].at; sec.flip = false;
+  $('secPick').value = sec.k; syncSecUI();
+  mode = 'section'; center = 'building'; syncCenter(); applyMode(); secCam();
+}));
+function focus(){ return center==='building' && L ? new THREE.Vector3(L.bx0+50,8,L.bz0+40) : new THREE.Vector3(102,0,139); }
+function setView(v){
+  const f = focus(); camera.fov = 38;
+  if(v==='aerial') camera.position.set(f.x+230,190,f.z-230);
+  else if(v==='street') camera.position.set(f.x-40,24,-120);
+  else if(v==='corona') camera.position.set(330,40,f.z+40);
+  else if(v==='plan'){ camera.fov = 12; camera.position.set(f.x,1450,f.z+0.01); }
+  else if(v==='section') camera.position.set(f.x,30,f.z-230);
+  camera.updateProjectionMatrix(); controls.target.copy(f); controls.update();
+}
+function planCam(){
+  const c = new THREE.Vector3(L.bx0+50,0,L.bz0+40);
+  camera.fov = 12; camera.updateProjectionMatrix();
+  const h = view.clientHeight, w = view.clientWidth, need = Math.max(BD+30, (BW+30)*h/w);
+  camera.position.set(c.x, need/2/Math.tan(THREE.MathUtils.degToRad(6)), c.z+0.01);
+  controls.target.copy(c); controls.update();
+}
+
+// ---------- UI wiring ----------
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
+  mode = b.dataset.mode; applyMode();
+  if(mode==='f1'||mode==='f2') planCam();
+  else if(mode==='section'){ center='building'; syncCenter(); secCam(); }
+}));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+function syncCenter(){ document.querySelectorAll('.ctr').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.center===center))); }
+document.querySelectorAll('.ctr').forEach(b=>b.addEventListener('click',()=>{
+  center = b.dataset.center; syncCenter();
+  const f = focus(), d = new THREE.Vector3().subVectors(f, controls.target);
+  controls.target.add(d); camera.position.add(d); controls.update();
+}));
+$('togglePanel').addEventListener('click',e=>{
+  const hidden = document.body.classList.toggle('panel-hidden');
+  e.currentTarget.setAttribute('aria-pressed', String(!hidden));
+  e.currentTarget.setAttribute('aria-label', hidden?'Show panel':'Hide panel');
+  e.currentTarget.title = hidden?'Show panel':'Hide panel';
+  requestAnimationFrame(resize);
+});
+$('toggleDims').addEventListener('click',e=>{
+  const on = document.body.classList.toggle('show-dims');
+  e.target.textContent = on ? 'Hide dimensions' : 'Show dimensions';
+  e.target.setAttribute('aria-pressed', String(on));
+});
+$('toggleLabels').addEventListener('click',e=>{
+  showLabels = !showLabels; applyMode();
+  e.target.textContent = showLabels ? 'Hide room labels' : 'Show room labels';
+  e.target.setAttribute('aria-pressed', String(showLabels));
+});
+$('toggleNeighbors').addEventListener('click',e=>{
+  showNeighbors = !showNeighbors; applyMode();
+  e.target.textContent = showNeighbors ? 'Hide nearby buildings' : 'Show nearby buildings';
+  e.target.setAttribute('aria-pressed', String(showNeighbors));
+});
+$('download').addEventListener('click',()=>{
+  const blob = new Blob([SRC],{type:'text/html'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '1100-6th-st-draft.html';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+});
+['wx','rear','plaza'].forEach(k=>$(k).addEventListener('input',e=>{ P[k] = +e.target.value; build(); }));
+['eave','ridge','seats','stall','aisle'].forEach(k=>$(k).addEventListener('change',e=>{
+  const v = parseFloat(e.target.value); P[k] = isFinite(v) ? v : (k==='seats'?0:P[k]); build();
+}));
+$('seats').value = '';
+
+// hover
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = $('tip');
+renderer.domElement.addEventListener('pointermove',e=>{
+  if(mode==='exterior'){ tip.style.display='none'; return; }
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(mouse,camera);
+  const vis = G.pick.filter(m=>{ let o=m; while(o){ if(!o.visible) return false; o=o.parent; } return true; });
+  const hit = ray.intersectObjects(vis,false).find(h=>!CLIP.length || CLIP.every(p=>p.distanceToPoint(h.point)>=-0.01));
+  if(!hit){ tip.style.display='none'; return; }
+  const rm = hit.object.userData.room;
+  tip.innerHTML = `<b>${rm.n}</b><span>${rm.kr} · ${rm.w}′ × ${rm.h}′ · ${fmt(rm.w*rm.h)} sq ft</span>`;
+  tip.style.display='block'; tip.style.left = (e.clientX-r.left+14)+'px'; tip.style.top = (e.clientY-r.top+14)+'px';
+});
+renderer.domElement.addEventListener('pointerleave',()=>tip.style.display='none');
+
+function resize(){
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w,h); labelR.setSize(w,h);
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(view);
+
+build(); resize(); setView('aerial');
+(function loop(){
+  requestAnimationFrame(loop); controls.update();
+  if(G) G.dims.children.forEach(o=>{ if(!o.isCSS2DObject) o.visible = document.body.classList.contains('show-dims'); });
+  renderer.render(scene,camera); labelR.render(scene,camera);
+})();
+})();
+</script>
+</body>
+</html>
